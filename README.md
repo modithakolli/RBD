@@ -8,6 +8,22 @@
 
 ---
 
+## Screenshots
+
+### Dashboard Overview
+![Dashboard overview — verdict, suspicion score, shadow distance comparison](docs/screenshots/01_dashboard_overview.png)
+
+### Pipeline Architecture
+![RBD++ detection pipeline — from UNSW-NB15 dataset to final verdict](docs/screenshots/04_pipeline_architecture.png)
+
+### Repeated Trials — 5-Seed Confidence Interval
+![Repeated trials line chart showing suspicion score across 5 random seeds with 90% CI band](docs/screenshots/02_repeated_trials.png)
+
+### Evaluation Metrics — Boundary Probe & Held-out ASR
+![Decision boundary probing bar chart and 100% held-out attack success rate donut](docs/screenshots/03_evaluation_metrics.png)
+
+---
+
 ## What it does
 
 A backdoored model behaves normally on regular inputs but silently misbehaves when a secret trigger pattern appears — e.g. a network-intrusion classifier that waves through malicious traffic carrying one specific feature combination.
