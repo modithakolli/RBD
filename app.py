@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -30,10 +31,16 @@ st.set_page_config(page_title="RBD++ Security Suite", layout="wide", initial_sid
 
 with st.sidebar:
     st.title("RBD++ Auditor")
-    user = st.text_input("Username", placeholder="admin")
-    pw = st.text_input("Password", type="password", placeholder="admin123")
-    auth = user == "admin" and pw == "admin123"
-    st.caption("Local demo credentials: admin / admin123")
+    user = st.text_input("Username")
+    pw = st.text_input("Password", type="password")
+
+    # Credentials sourced from environment or Streamlit secrets — never hardcoded.
+    _expected_user = st.secrets.get("AUDIT_USER", None) or os.environ.get("AUDIT_USER", "admin")
+    _expected_pass = st.secrets.get("AUDIT_PASS", None) or os.environ.get("AUDIT_PASS", "")
+
+    auth = bool(_expected_pass) and user == _expected_user and pw == _expected_pass
+    if not _expected_pass:
+        st.warning("Set AUDIT_PASS in your environment or `.streamlit/secrets.toml` to enable login.")
 
 if not auth:
     st.title("Security Access Required")
@@ -80,7 +87,7 @@ with tab1:
     st.json(metrics)
 
 with tab2:
-    st.subheader("Transformer-Style Text Trigger Audit")
+    st.subheader("Text / LLM Trigger Audit")
     if llm:
         st.metric("Verdict", llm["verdict"])
         st.metric("Trigger Divergence", f"{llm['trigger_probe_divergence']:.6f}")
@@ -121,7 +128,11 @@ with tab5:
     st.metric("Ledger Records", ledger_status["records"])
     st.metric("Ledger Status", ledger_status["reason"])
     if PROVENANCE_LEDGER_PATH.exists():
-        rows = [json.loads(line) for line in PROVENANCE_LEDGER_PATH.read_text(encoding="utf-8").splitlines() if line.strip()]
+        rows = [
+            json.loads(line)
+            for line in PROVENANCE_LEDGER_PATH.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
         st.dataframe(pd.DataFrame(rows), use_container_width=True)
     else:
         st.info("No ledger records yet.")
