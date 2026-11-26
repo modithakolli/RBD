@@ -1,8 +1,5 @@
 import json
-<<<<<<< HEAD
 import os
-=======
->>>>>>> b5ee7ca4aeb0dab0fb7f4eff1a8db4b2e9a26b62
 from pathlib import Path
 
 import pandas as pd
@@ -34,7 +31,6 @@ st.set_page_config(page_title="RBD++ Security Suite", layout="wide", initial_sid
 
 with st.sidebar:
     st.title("RBD++ Auditor")
-<<<<<<< HEAD
     user = st.text_input("Username")
     pw = st.text_input("Password", type="password")
 
@@ -45,12 +41,6 @@ with st.sidebar:
     auth = bool(_expected_pass) and user == _expected_user and pw == _expected_pass
     if not _expected_pass:
         st.warning("Set AUDIT_PASS in your environment or `.streamlit/secrets.toml` to enable login.")
-=======
-    user = st.text_input("Username", placeholder="admin")
-    pw = st.text_input("Password", type="password", placeholder="admin123")
-    auth = user == "admin" and pw == "admin123"
-    st.caption("Local demo credentials: admin / admin123")
->>>>>>> b5ee7ca4aeb0dab0fb7f4eff1a8db4b2e9a26b62
 
 if not auth:
     st.title("Security Access Required")
@@ -97,11 +87,7 @@ with tab1:
     st.json(metrics)
 
 with tab2:
-<<<<<<< HEAD
     st.subheader("Text / LLM Trigger Audit")
-=======
-    st.subheader("Transformer-Style Text Trigger Audit")
->>>>>>> b5ee7ca4aeb0dab0fb7f4eff1a8db4b2e9a26b62
     if llm:
         st.metric("Verdict", llm["verdict"])
         st.metric("Trigger Divergence", f"{llm['trigger_probe_divergence']:.6f}")
@@ -142,15 +128,11 @@ with tab5:
     st.metric("Ledger Records", ledger_status["records"])
     st.metric("Ledger Status", ledger_status["reason"])
     if PROVENANCE_LEDGER_PATH.exists():
-<<<<<<< HEAD
         rows = [
             json.loads(line)
             for line in PROVENANCE_LEDGER_PATH.read_text(encoding="utf-8").splitlines()
             if line.strip()
         ]
-=======
-        rows = [json.loads(line) for line in PROVENANCE_LEDGER_PATH.read_text(encoding="utf-8").splitlines() if line.strip()]
->>>>>>> b5ee7ca4aeb0dab0fb7f4eff1a8db4b2e9a26b62
         st.dataframe(pd.DataFrame(rows), use_container_width=True)
     else:
         st.info("No ledger records yet.")
