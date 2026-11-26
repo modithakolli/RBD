@@ -1,0 +1,6 @@
+{
+  "clean_candidate_alignment": 0.0,
+  "poisoned_candidate_clean_alignment": 0.20164337403929325,
+  "poisoned_candidate_trigger_spike": 0.16393944216402678,
+  "verdict": "REJECT UPDATE"
+}
