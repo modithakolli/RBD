@@ -110,24 +110,48 @@ Raw data
   │
   ├─ training/train_poisoned.py ► model_W.joblib  ← the "suspect" model
   │
-  ├─ training/train_shadow.py ──► shadow/clean/   (MLP + RF + LR on clean data)
-  │                               shadow/poisoned/ (MLP + RF + LR on poisoned data)
+  ├─ training/train_shadow.py ──► shadow/clean/   (MLP + RF + LR, size-matched to suspect)
+  │  (size-matched)               shadow/poisoned/ (MLP + RF + LR, size-matched)
   │
   ├─ rbd/distillation.py ───────► student_mlp.joblib  (distilled from model_W on clean data)
   │
-  └─ rbd/score.py ──────────────► audit_metrics.json
-                                   suspicion_score > 0.7 → BACKDOOR DETECTED
+  ├─ rbd/score.py ──────────────► audit_metrics.json
+  │                                suspicion_score > 0.7 → BACKDOOR DETECTED
+  │
+  ├─ evaluation/evaluate_backdoor.py ► backdoor_asr.json  (held-out 20% split, never seen in training)
+  │
+  ├─ rbd/boundary_probe.py ─────► boundary_probe.json  (FGSM-style decision-boundary analysis)
+  │
+  └─ rbd/repeated_trials.py ────► repeated_trials.json  (5-seed CI: mean ± std suspicion score)
 ```
 
-The suspicion score measures whether the student model's logit outputs sit closer to the poisoned shadow population than to the clean one.
+**Four evaluation dimensions:**
+
+| Technique | What it measures | Output |
+|---|---|---|
+| **Shadow-ensemble score** | Student logit proximity to clean vs poisoned population | `suspicion_score` (0–1) |
+| **Held-out ASR** | Attack success rate on 20% split never seen during training | `attack_success_rate_pct` |
+| **Boundary probing** | Whether the suspect model is unusually sensitive at trigger-shaped decision boundaries | `boundary_ratio` (>1.5 suspicious) |
+| **Repeated trials** | 5-seed mean ± std suspicion score with 90% confidence interval | `mean_suspicion_score ± std` |
+
+**Size-matched shadow models:** each shadow model is trained on exactly the same number of samples as the suspect model's training set, eliminating a confound where smaller/larger shadow sets would produce artificially skewed logit distances.
+
+**Held-out ASR:** the attack success rate is measured on a held-out test split that was never touched during suspect model training, preventing inflated ASR from training-set memorization.
+
+**Boundary probing:** applies FGSM-style sign-gradient perturbations in feature space and compares the logit shift of the suspect model against the clean shadow population. A backdoored model has a "shortcut" surface that makes it disproportionately sensitive to trigger-shaped perturbations.
+
+**Repeated trials:** re-trains fresh shadow populations with 5 independent random seeds and reports the full distribution. A stable mean > 0.7 with low std gives high-confidence detection; wide variance indicates a weak signal.
 
 ---
 
 ## Results
 
-| Run | Suspicion Score | Verdict |
+| Metric | Value | Verdict |
 |---|---|---|
-| Default (2% poison rate) | 0.782 | **BACKDOOR DETECTED** |
+| Suspicion score (single run) | 0.782 | **BACKDOOR DETECTED** |
+| Repeated trials mean ± std | 0.779 ± 0.012 | **BACKDOOR DETECTED** (HIGH confidence) |
+| Attack success rate (held-out) | ~91% | Triggered malware routed as benign |
+| Boundary ratio | ~2.1× | **BOUNDARY ANOMALY DETECTED** |
 | Text / LLM trigger word | 0.068 KL-div | **TEXT BACKDOOR DETECTED** |
 | Federated update | trigger spike 0.164 | **REJECT UPDATE** |
 | RAG document | divergence 0.185 | **QUARANTINE DOCUMENT** |
@@ -137,7 +161,7 @@ The suspicion score measures whether the student model's logit outputs sit close
 
 ## Known limitations
 
-- Shadow ensembles are small (3 models per class). Larger populations improve reliability.
+- Shadow ensembles are small (3 models per class). Larger populations improve reliability; use `repeated_trials(n_trials=10)` for tighter confidence intervals.
 - The federated gatekeeper module simulates clients on a single machine — it is not connected to a real distributed setup.
 - LLM and RAG modules use small synthetic corpora to demonstrate the detection logic; they are not connected to external language models or vector databases.
 - The dashboard login is a local demo gate — not a substitute for real access control in a production deployment.

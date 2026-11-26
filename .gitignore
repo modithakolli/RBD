@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# Environment / secrets
+.env
+.streamlit/secrets.toml
+
+# Large dataset files — download separately (see README)
+data/raw/*.csv
+data/raw/*.tsv
+
+# Pipeline-generated artifacts (recreated by run_pipeline.py)
+data/poisoned/
+data/small_clean/
+models/suspicious/*.joblib
+models/suspicious/signature.txt
+models/distilled/*.joblib
+models/shadow/clean/*.joblib
+models/shadow/poisoned/*.joblib
+models/clean/*.joblib
+results/*.json
+logs/*.jsonl
+
+# Keep empty directory scaffolding
+!data/poisoned/.gitkeep
+!data/small_clean/.gitkeep
+!data/raw/.gitkeep
+!models/suspicious/.gitkeep
+!models/distilled/.gitkeep
+!models/shadow/clean/.gitkeep
+!models/shadow/poisoned/.gitkeep
+!models/clean/.gitkeep
+!results/.gitkeep
+!logs/.gitkeep
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.iml
