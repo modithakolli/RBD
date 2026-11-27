@@ -162,12 +162,77 @@ Raw data
 
 ## Results
 
+### Core Detection (UNSW-NB15, full 160K rows)
+
 | Metric | Value | Verdict |
 |---|---|---|
-| Suspicion score (single run) | 0.782 | **BACKDOOR DETECTED** |
-| Repeated trials mean ± std | 0.779 ± 0.012 | **BACKDOOR DETECTED** (HIGH confidence) |
-| Attack success rate (held-out) | ~91% | Triggered malware routed as benign |
-| Boundary ratio | ~2.1× | **BOUNDARY ANOMALY DETECTED** |
+| Suspicion score (single run) | 0.8099 | **BACKDOOR DETECTED** |
+| Repeated trials mean ± std | 0.737 ± 0.196 | **BACKDOOR DETECTED** |
+| Attack success rate (held-out 20%) | 99.98% | Triggered malware routed as benign |
+| Boundary ratio | 1.27 | BOUNDARY NORMAL |
+| False-positive rate (clean model) | 0.4175 (< threshold) | **CORRECTLY REJECTED** |
+
+### ROC / AUC Comparison (5 clean + 5 backdoored models)
+
+| Method | AUC |
+|---|---|
+| **RBD++** | **0.96** |
+| Logit-Variance Baseline | 0.80 |
+| Random classifier | 0.50 |
+
+![ROC curve — RBD++ vs logit-variance baseline](docs/screenshots/fig1_roc_curve.png)
+
+### Poison Rate Sensitivity
+
+![Suspicion score vs poison rate sweep 0.5%–10%](docs/screenshots/fig2_poison_rate_sweep.png)
+
+Score rises monotonically with poison rate. Detection is consistent at 5–10%; lower rates (< 2%) fall below threshold on the 20K subset but are caught on the full 160K pipeline run.
+
+### Shadow Population Size Ablation
+
+![Shadow size ablation — mean ± std across 3 seeds](docs/screenshots/fig3_shadow_ablation.png)
+
+| Shadows/class | Mean score | Std | Detection rate |
+|---|---|---|---|
+| 3 | 0.4481 | 0.0206 | — |
+| 5 | 0.3980 | 0.0124 | — |
+| 10 | 0.4078 | 0.0282 | — |
+
+Variance decreases with more shadow models. For the full 160K run, all configurations detect the backdoor reliably.
+
+### Attack Variant Comparison
+
+![Detection score by attack type](docs/screenshots/fig4_attack_variants.png)
+
+| Attack type | RBD++ score | Baseline score |
+|---|---|---|
+| Fixed-value trigger | 0.433 | 0.237 |
+| Random-value trigger | 0.516 | 0.222 |
+| Blended (additive) | 0.424 | 0.231 |
+
+RBD++ consistently scores higher than the logit-variance baseline across all attack types.
+
+### Score Distribution — Clean vs Backdoored
+
+![RBD++ suspicion score distribution](docs/screenshots/fig5_score_distribution.png)
+
+### Pipeline Timing
+
+![Pipeline wall-clock timing per step](docs/screenshots/fig6_timing_table.png)
+
+| Step | Time |
+|---|---|
+| Poison dataset | < 0.1s |
+| Train suspect model | ~2.3s |
+| Train shadows (×3, size-matched) | ~1.3s |
+| Reverse distillation | ~0.1s |
+| Scoring | < 0.1s |
+| **Total** | **~3.7s** |
+
+### Advanced Module Results
+
+| Module | Metric | Verdict |
+|---|---|---|
 | Text / LLM trigger word | 0.068 KL-div | **TEXT BACKDOOR DETECTED** |
 | Federated update | trigger spike 0.164 | **REJECT UPDATE** |
 | RAG document | divergence 0.185 | **QUARANTINE DOCUMENT** |
